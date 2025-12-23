@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Школьный чат</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Arial;background:#ece5dd}
+.chat{position:fixed;inset:0;display:flex;flex-direction:column;background:#fff}
+.header{background:#075e54;color:#fff;padding:14px;text-align:center;font-weight:bold}
+.profile{padding:8px;background:#f0f0f0}
+.profile input{width:100%;padding:8px;margin-bottom:6px;border-radius:20px;border:1px solid #ccc}
+#messages{flex:1;overflow-y:auto;padding:10px;background:#dcf8c6}
+.msg{display:flex;gap:8px;margin-bottom:10px;max-width:80%}
+.msg.me{margin-left:auto;flex-direction:row-reverse}
+.avatar{width:36px;height:36px;border-radius:50%;background:#888;color:#fff;
+display:flex;align-items:center;justify-content:center;font-weight:bold;object-fit:cover}
+.bubble{background:#fff;padding:8px 12px;border-radius:10px;font-size:14px}
+.msg.me .bubble{background:#e1ffc7}
+.del{font-size:12px;color:red;cursor:pointer}
+.input{display:flex;gap:6px;padding:8px;background:#f0f0f0}
+.input input{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc}
+button{border:none;border-radius:20px;padding:0 16px;background:#075e54;color:#fff}
+</style>
+</head>
+
+<body>
+<div class="chat">
+  <div class="header">💬 Школьный чат</div>
+
+  <div class="profile">
+    <input id="name" placeholder="Имя">
+    <input id="avatar" placeholder="Ссылка на аватар (необязательно)">
+  </div>
+
+  <div id="messages"></div>
+
+  <div class="input">
+    <input id="text" placeholder="Сообщение">
+    <button onclick="send()">➤</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyDIwoHwl4-jNlXysDTUTrT7X38o8X5YMjw",
+  authDomain:"schooll-chat.firebaseapp.com",
+  databaseURL:"https://schooll-chat-default-rtdb.firebaseio.com",
+  projectId:"schooll-chat"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const ref=db.ref("messages");
+
+const nameInput=document.getElementById("name");
+const avatarInput=document.getElementById("avatar");
+const messagesDiv=document.getElementById("messages");
+
+nameInput.value=localStorage.name||"";
+avatarInput.value=localStorage.avatar||"";
+nameInput.oninput=()=>localStorage.name=nameInput.value;
+avatarInput.oninput=()=>localStorage.avatar=avatarInput.value;
+
+ref.on("child_added",snap=>{
+  const m=snap.val();
+  const key=snap.key;
+  const me=m.name===nameInput.value;
+
+  const div=document.createElement("div");
+  div.className="msg"+(me?" me":"");
+
+  const avatar=m.avatar
+    ? `<img class="avatar" src="${m.avatar}">`
+    : `<div class="avatar">${m.name[0]}</div>`;
+
+  div.innerHTML=`
+    ${avatar}
+    <div>
+      <div class="bubble"><b>${m.name}</b><br>${m.text}</div>
+      ${me?`<div class="del" onclick="del('${key}')">удалить</div>`:""}
+    </div>
+  `;
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop=messagesDiv.scrollHeight;
+});
+
+function send(){
+  if(!nameInput.value||!text.value)return;
+  ref.push({
+    name:nameInput.value,
+    text:text.value,
+    avatar:avatarInput.value||""
+  });
+  text.value="";
+}
+
+function del(key){
+  ref.child(key).remove();
+}
+</script>
+</body>
+</html>
