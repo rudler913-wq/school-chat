@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Школьный чат</title>
+</head>
+<body>
+
+<h2>Школьный чат</h2>
+
+<input id="name" placeholder="Ваше имя"><br><br>
+<input id="text" placeholder="Сообщение">
+<button id="send">Отправить</button>
+
+<hr>
+<div id="messages"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded }
+    from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDIwoHwl4-jNlXysDTUTrT7X38o8X5YMjw",
+    authDomain: "schooll-chat.firebaseapp.com",
+    databaseURL: "https://schooll-chat-default-rtdb.firebaseio.com",
+    projectId: "schooll-chat",
+    storageBucket: "schooll-chat.firebasestorage.app",
+    messagingSenderId: "61412865562",
+    appId: "1:61412865562:web:65a0c70aa73aff98cf43a3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const messagesRef = ref(db, "messages");
+
+  document.getElementById("send").onclick = () => {
+    const name = document.getElementById("name").value;
+    const text = document.getElementById("text").value;
+    if (!name || !text) return;
+
+    push(messagesRef, {
+      name: name,
+      text: text,
+      time: Date.now()
+    });
+
+    document.getElementById("text").value = "";
+  };
+
+  onChildAdded(messagesRef, (snapshot) => {
+    const msg = snapshot.val();
+    const div = document.createElement("div");
+    div.textContent = msg.name + ": " + msg.text;
+    document.getElementById("messages").appendChild(div);
+  });
+</script>
+
+</body>
+</html>
